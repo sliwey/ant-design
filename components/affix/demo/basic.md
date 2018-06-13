@@ -29,7 +29,7 @@ class Demo extends React.Component {
             type="primary"
             onClick={() => {
               this.setState({
-                bottom: this.state.bottom + 10,
+                bottom: this.state.top + 10,
               });
             }}
           >
