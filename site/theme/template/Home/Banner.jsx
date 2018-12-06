@@ -19,15 +19,18 @@ class Banner extends React.PureComponent {
   static contextTypes = {
     intl: PropTypes.object.isRequired,
   }
+
   static propTypes = {
     className: PropTypes.string,
   }
+
   static defaultProps = {
     className: 'banner',
   }
+
   render() {
     const { className, isMobile } = this.props;
-    const { locale } = this.context.intl;
+    const { intl: { locale } } = this.context;
     const isZhCN = locale === 'zh-CN';
     return (
       <div className="home-page-wrapper banner-wrapper" id="banner">
@@ -47,10 +50,13 @@ class Banner extends React.PureComponent {
           <ScrollParallax location="banner" className="banner-bg" animation={{ playScale: [1, 1.5], rotate: 0 }} />
         </div>
         <QueueAnim className={`${className} page`} type="alpha" delay={150}>
-          {isMobile && (
-            <div className="img-wrapper" key="image">
-              <BannerImage />
-            </div>)}
+          {
+            isMobile && (
+              <div className="img-wrapper" key="image">
+                <BannerImage />
+              </div>
+            )
+          }
           <QueueAnim
             className="text-wrapper"
             key="text"

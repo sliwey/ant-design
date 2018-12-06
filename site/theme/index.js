@@ -10,12 +10,13 @@ function pickerGenerator(module) {
   const tester = new RegExp(`^docs/${module}`);
   return (markdownData) => {
     const { filename } = markdownData.meta;
-    if (tester.test(filename) &&
-        !/\/demo$/.test(path.dirname(filename))) {
+    if (tester.test(filename)
+        && !/\/demo$/.test(path.dirname(filename))) {
       return {
         meta: markdownData.meta,
       };
     }
+    return null;
   };
 }
 
@@ -29,9 +30,10 @@ module.exports = {
   pick: {
     components(markdownData) {
       const { filename } = markdownData.meta;
-      if (!/^components/.test(filename) ||
-          /[/\\]demo$/.test(path.dirname(filename))) return;
-
+      if (!/^components/.test(filename)
+          || /[/\\]demo$/.test(path.dirname(filename))) {
+        return null;
+      }
       return {
         meta: markdownData.meta,
       };
@@ -42,6 +44,7 @@ module.exports = {
           meta: markdownData.meta,
         };
       }
+      return null;
     },
     'docs/pattern': pickerGenerator('pattern'),
     'docs/react': pickerGenerator('react'),
@@ -51,7 +54,7 @@ module.exports = {
   plugins: [
     'bisheng-plugin-description',
     'bisheng-plugin-toc?maxDepth=2&keepElem',
-    'bisheng-plugin-antd',
+    'bisheng-plugin-antd?injectProvider',
     'bisheng-plugin-react?lang=__react',
   ],
   routes: {

@@ -9,7 +9,7 @@ describe('Input.Search', () => {
 
   it('should support custom button', () => {
     const wrapper = mount(
-      <Search enterButton={<button>ok</button>} />
+      <Search enterButton={<button type="button">ok</button>} />
     );
     expect(wrapper.render()).toMatchSnapshot();
   });
@@ -19,6 +19,15 @@ describe('Input.Search', () => {
       <Search enterButton={<Button>ok</Button>} />
     );
     expect(wrapper.render()).toMatchSnapshot();
+  });
+
+  it('should support ReactNode suffix without error', () => {
+    const fn = () => {
+      mount(
+        <Search suffix={<div>ok</div>} />
+      );
+    };
+    expect(fn).not.toThrow();
   });
 
   it('should disable enter button when disabled prop is true', () => {
@@ -33,9 +42,12 @@ describe('Input.Search', () => {
     const wrapper = mount(
       <Search defaultValue="search text" onSearch={onSearch} />
     );
-    wrapper.find('Icon').simulate('click');
+    wrapper.find('.anticon-search').simulate('click');
     expect(onSearch).toHaveBeenCalledTimes(1);
-    expect(onSearch).toBeCalledWith('search text');
+    expect(onSearch).toBeCalledWith('search text', expect.objectContaining({
+      type: 'click',
+      preventDefault: expect.any(Function),
+    }));
   });
 
   it('should trigger onSearch when click search button', () => {
@@ -45,7 +57,10 @@ describe('Input.Search', () => {
     );
     wrapper.find('Button').simulate('click');
     expect(onSearch).toHaveBeenCalledTimes(1);
-    expect(onSearch).toBeCalledWith('search text');
+    expect(onSearch).toBeCalledWith('search text', expect.objectContaining({
+      type: 'click',
+      preventDefault: expect.any(Function),
+    }));
   });
 
   it('should trigger onSearch when click search button with text', () => {
@@ -55,7 +70,10 @@ describe('Input.Search', () => {
     );
     wrapper.find('Button').simulate('click');
     expect(onSearch).toHaveBeenCalledTimes(1);
-    expect(onSearch).toBeCalledWith('search text');
+    expect(onSearch).toBeCalledWith('search text', expect.objectContaining({
+      type: 'click',
+      preventDefault: expect.any(Function),
+    }));
   });
 
   it('should trigger onSearch when click search button with customize button', () => {
@@ -65,17 +83,23 @@ describe('Input.Search', () => {
     );
     wrapper.find('Button').simulate('click');
     expect(onSearch).toHaveBeenCalledTimes(1);
-    expect(onSearch).toBeCalledWith('search text');
+    expect(onSearch).toBeCalledWith('search text', expect.objectContaining({
+      type: 'click',
+      preventDefault: expect.any(Function),
+    }));
   });
 
   it('should trigger onSearch when click search button of native', () => {
     const onSearch = jest.fn();
     const wrapper = mount(
-      <Search defaultValue="search text" enterButton={<button>antd button</button>} onSearch={onSearch} />
+      <Search defaultValue="search text" enterButton={<button type="button">antd button</button>} onSearch={onSearch} />
     );
     wrapper.find('button').simulate('click');
     expect(onSearch).toHaveBeenCalledTimes(1);
-    expect(onSearch).toBeCalledWith('search text');
+    expect(onSearch).toBeCalledWith('search text', expect.objectContaining({
+      type: 'click',
+      preventDefault: expect.any(Function),
+    }));
   });
 
   it('should trigger onSearch when press enter', () => {
@@ -85,6 +109,9 @@ describe('Input.Search', () => {
     );
     wrapper.find('input').simulate('keydown', { key: 'Enter', keyCode: 13 });
     expect(onSearch).toHaveBeenCalledTimes(1);
-    expect(onSearch).toBeCalledWith('search text');
+    expect(onSearch).toBeCalledWith('search text', expect.objectContaining({
+      type: 'keydown',
+      preventDefault: expect.any(Function),
+    }));
   });
 });

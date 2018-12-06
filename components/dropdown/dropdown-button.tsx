@@ -1,12 +1,15 @@
 import * as React from 'react';
 import Button from '../button';
+import { ButtonHTMLType } from '../button/button';
 import { ButtonGroupProps } from '../button/button-group';
+import { ConfigConsumer, ConfigProviderProps } from '../config-provider';
 import Dropdown, { DropDownProps } from './dropdown';
 import classNames from 'classnames';
 const ButtonGroup = Button.Group;
 
 export interface DropdownButtonProps extends ButtonGroupProps, DropDownProps {
   type?: 'primary' | 'ghost' | 'dashed';
+  htmlType?: ButtonHTMLType;
   disabled?: boolean;
   onClick?: React.MouseEventHandler<HTMLButtonElement>;
   children?: any;
@@ -19,9 +22,9 @@ export default class DropdownButton extends React.Component<DropdownButtonProps,
     prefixCls: 'ant-dropdown-button',
   };
 
-  render() {
+  renderButton = ({ getPopupContainer: getContextPopupContainer }: ConfigProviderProps) => {
     const {
-      type, disabled, onClick, children,
+      type, disabled, onClick, htmlType, children,
       prefixCls, className, overlay, trigger, align,
       visible, onVisibleChange, placement, getPopupContainer,
       ...restProps
@@ -34,7 +37,7 @@ export default class DropdownButton extends React.Component<DropdownButtonProps,
       trigger: disabled ? [] : trigger,
       onVisibleChange,
       placement,
-      getPopupContainer,
+      getPopupContainer: getPopupContainer || getContextPopupContainer,
     } as DropDownProps;
     if ('visible' in this.props) {
       dropdownProps.visible = visible;
@@ -49,6 +52,7 @@ export default class DropdownButton extends React.Component<DropdownButtonProps,
           type={type}
           disabled={disabled}
           onClick={onClick}
+          htmlType={htmlType}
         >
           {children}
         </Button>
@@ -56,6 +60,14 @@ export default class DropdownButton extends React.Component<DropdownButtonProps,
           <Button type={type} icon="ellipsis" />
         </Dropdown>
       </ButtonGroup>
+    );
+  }
+
+  render() {
+    return (
+      <ConfigConsumer>
+        {this.renderButton}
+      </ConfigConsumer>
     );
   }
 }

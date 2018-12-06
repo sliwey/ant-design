@@ -6,7 +6,7 @@ import Button from '../button';
 
 export interface SearchProps extends InputProps {
   inputPrefixCls?: string;
-  onSearch?: (value: string) => any;
+  onSearch?: (value: string, event?: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLInputElement>) => any;
   enterButton?: boolean | React.ReactNode;
 }
 
@@ -19,10 +19,10 @@ export default class Search extends React.Component<SearchProps, any> {
 
   private input: Input;
 
-  onSearch = () => {
+  onSearch = (e: React.MouseEvent<HTMLElement> | React.KeyboardEvent<HTMLInputElement>) => {
     const { onSearch } = this.props;
     if (onSearch) {
-      onSearch(this.input.input.value);
+      onSearch(this.input.input.value, e);
     }
     this.input.focus();
   }
@@ -69,10 +69,18 @@ export default class Search extends React.Component<SearchProps, any> {
   }
 
   render() {
-    const { className, prefixCls, inputPrefixCls, size, suffix,  enterButton, ...others } = this.props;
+    const { className, prefixCls, inputPrefixCls, size, suffix, enterButton, ...others } = this.props;
     delete (others as any).onSearch;
     const buttonOrIcon = this.getButtonOrIcon();
-    const searchSuffix = suffix ? [suffix, buttonOrIcon] : buttonOrIcon;
+    let searchSuffix = suffix ? [suffix, buttonOrIcon] : buttonOrIcon;
+    if (Array.isArray(searchSuffix)) {
+      searchSuffix = (searchSuffix as React.ReactElement<any>[]).map((item, index) => {
+        if (!React.isValidElement(item) || item.key) {
+          return item;
+        }
+        return React.cloneElement(item, {key: index});
+      });
+    }
     const inputClassName = classNames(prefixCls, className, {
       [`${prefixCls}-enter-button`]: !!enterButton,
       [`${prefixCls}-${size}`]: !!size,

@@ -2,7 +2,13 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import Upload from '..';
-import { fileToObject } from '../utils';
+import {
+  T,
+  fileToObject,
+  genPercentAdd,
+  getFileItem,
+  removeFileItem,
+} from '../utils';
 import { setup, teardown } from './mock';
 
 describe('Upload', () => {
@@ -16,6 +22,7 @@ describe('Upload', () => {
       componentDidMount() {
         ref = this.refs.input;
       }
+
       render() {
         return (
           <Upload supportServerRender={false}>
@@ -32,9 +39,9 @@ describe('Upload', () => {
     const data = jest.fn();
     const props = {
       action: 'http://upload.com',
-      beforeUpload: () => new Promise(resolve =>
+      beforeUpload: () => new Promise(resolve => (
         setTimeout(() => resolve('success'), 100)
-      ),
+      )),
       data,
       onChange: ({ file }) => {
         if (file.status !== 'uploading') {
@@ -46,7 +53,7 @@ describe('Upload', () => {
 
     const wrapper = mount(
       <Upload {...props}>
-        <button>upload</button>
+        <button type="button">upload</button>
       </Upload>
     );
 
@@ -83,7 +90,7 @@ describe('Upload', () => {
 
     const wrapper = mount(
       <Upload {...props}>
-        <button>upload</button>
+        <button type="button">upload</button>
       </Upload>
     );
 
@@ -118,7 +125,7 @@ describe('Upload', () => {
 
     const wrapper = mount(
       <Upload {...props}>
-        <button>upload</button>
+        <button type="button">upload</button>
       </Upload>
     );
 
@@ -147,7 +154,7 @@ describe('Upload', () => {
 
     const wrapper = mount(
       <Upload {...props}>
-        <button>upload</button>
+        <button type="button">upload</button>
       </Upload>
     );
 
@@ -160,7 +167,28 @@ describe('Upload', () => {
     });
   });
 
+  it('should be controlled by fileList', () => {
+    const fileList = [{
+      uid: '-1',
+      name: 'foo.png',
+      status: 'done',
+      url: 'http://www.baidu.com/xxx.png',
+    }];
+    const wrapper = mount(
+      <Upload />
+    );
+    expect(wrapper.instance().state.fileList).toEqual([]);
+    wrapper.setProps({ fileList });
+    expect(wrapper.instance().state.fileList).toEqual(fileList);
+  });
+
   describe('util', () => {
+    // https://github.com/react-component/upload/issues/36
+    it('should T() return true', () => {
+      const res = T();
+      expect(res).toBe(true);
+    });
+
     it('should be able to copy file instance', () => {
       const file = new File([], 'aaa.zip');
       const copiedFile = fileToObject(file);
@@ -168,5 +196,98 @@ describe('Upload', () => {
         expect(key in copiedFile).toBe(true);
       });
     });
+
+    it('should be able to progress from 0.1 ', () => {
+      // 0.1 -> 0.98
+      const getPercent = genPercentAdd();
+      let curPercent = 0;
+      curPercent = getPercent(curPercent);
+      expect(curPercent).toBe(0.1);
+    });
+
+    it('should be able to progress to 0.98 ', () => {
+      // 0.1 -> 0.98
+      const getPercent = genPercentAdd();
+      let curPercent = 0;
+      for (let i = 0; i < 500; i += 1) {
+        curPercent = getPercent(curPercent);
+      }
+      expect(parseFloat(curPercent.toFixed(2))).toBe(0.98);
+    });
+
+    it('should be able to get fileItem', () => {
+      const file = { uid: '-1', name: 'item.jpg' };
+      const fileList = [{
+        uid: '-1',
+        name: 'item.jpg',
+      }];
+      const targetItem = getFileItem(file, fileList);
+      expect(targetItem).toBe(fileList[0]);
+    });
+
+    it('should be able to remove fileItem', () => {
+      const file = { uid: '-1', name: 'item.jpg' };
+      const fileList = [{
+        uid: '-1',
+        name: 'item.jpg',
+      }, {
+        uid: '-2',
+        name: 'item2.jpg',
+      }];
+      const targetItem = removeFileItem(file, fileList);
+      expect(targetItem).toEqual(fileList.slice(1));
+    });
+
+    it('should not be able to remove fileItem', () => {
+      const file = { uid: '-3', name: 'item.jpg' };
+      const fileList = [{
+        uid: '-1',
+        name: 'item.jpg',
+      }, {
+        uid: '-2',
+        name: 'item2.jpg',
+      }];
+      const targetItem = removeFileItem(file, fileList);
+      expect(targetItem).toBe(null);
+    });
+  });
+
+  it('should support linkProps as object', () => {
+    const fileList = [{
+      uid: '-1',
+      name: 'foo.png',
+      status: 'done',
+      url: 'http://www.baidu.com/xxx.png',
+      linkProps: {
+        download: 'image',
+        rel: 'noopener',
+      },
+    }];
+    const wrapper = mount(
+      <Upload fileList={fileList} />
+    );
+    const linkNode = wrapper.find('a.ant-upload-list-item-name');
+    expect(linkNode.props().download).toBe('image');
+    expect(linkNode.props().rel).toBe('noopener');
+  });
+
+  it('should support linkProps as json stringify', () => {
+    const linkPropsString = JSON.stringify({
+      download: 'image',
+      rel: 'noopener',
+    });
+    const fileList = [{
+      uid: '-1',
+      name: 'foo.png',
+      status: 'done',
+      url: 'http://www.baidu.com/xxx.png',
+      linkProps: linkPropsString,
+    }];
+    const wrapper = mount(
+      <Upload fileList={fileList} />
+    );
+    const linkNode = wrapper.find('a.ant-upload-list-item-name');
+    expect(linkNode.props().download).toBe('image');
+    expect(linkNode.props().rel).toBe('noopener');
   });
 });

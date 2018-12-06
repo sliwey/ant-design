@@ -162,6 +162,36 @@ describe('Table.rowSelection', () => {
     expect(handleSelect.mock.calls[0][3].type).toBe('change');
   });
 
+  it('fires selectMulti event', () => {
+    const handleSelectMulti = jest.fn();
+    const handleSelect = jest.fn();
+    const rowSelection = {
+      onSelect: handleSelect,
+      onSelectMultiple: handleSelectMulti,
+    };
+    const wrapper = mount(createTable({ rowSelection }));
+
+    wrapper.find('input').at(1).simulate('change', {
+      target: { checked: true },
+      nativeEvent: { shiftKey: true },
+    });
+    expect(handleSelect).toBeCalled();
+
+    wrapper.find('input').at(3).simulate('change', {
+      target: { checked: true },
+      nativeEvent: { shiftKey: true },
+    });
+    expect(handleSelectMulti).toBeCalledWith(true,
+      [data[0], data[1], data[2]], [data[1], data[2]]);
+
+    wrapper.find('input').at(1).simulate('change', {
+      target: { checked: false },
+      nativeEvent: { shiftKey: true },
+    });
+    expect(handleSelectMulti).toBeCalledWith(false,
+      [], [data[0], data[1], data[2]]);
+  });
+
   it('fires selectAll event', () => {
     const handleSelectAll = jest.fn();
     const rowSelection = {
@@ -306,13 +336,15 @@ describe('Table.rowSelection', () => {
       state = {
         disableName: 'Jack',
       };
+
       render() {
+        const { disableName } = this.state;
         return (
           <Table
             columns={columns}
             dataSource={data}
             rowSelection={{
-              getCheckboxProps: record => ({ disabled: record.name === this.state.disableName }),
+              getCheckboxProps: record => ({ disabled: record.name === disableName }),
             }}
           />
         );
@@ -388,5 +420,83 @@ describe('Table.rowSelection', () => {
       expect(checkbox.props().checked).toBe(true);
       expect(checkbox.props().indeterminate).toBe(false);
     });
+  });
+
+  // https://github.com/ant-design/ant-design/issues/11042
+  it('add columnTitle for rowSelection', () => {
+    const wrapper = mount(
+      <Table
+        columns={columns}
+        dataSource={data}
+        rowSelection={{
+          columnTitle: '多选',
+        }}
+      />
+    );
+    expect(wrapper.find('thead tr div').at(0).text()).toBe('多选');
+    wrapper.setProps({
+      rowSelection: {
+        type: 'radio',
+        columnTitle: '单选',
+      },
+    });
+    expect(wrapper.find('thead tr div').at(0).text()).toBe('单选');
+  });
+
+  // https://github.com/ant-design/ant-design/issues/11384
+  it('should keep item even if in filter', () => {
+    const filterColumns = [{
+      title: 'Name',
+      dataIndex: 'name',
+      filters: [{
+        text: 'Jack',
+        value: 'Jack',
+      }, {
+        text: 'Lucy',
+        value: 'Lucy',
+      }],
+      filterDropdownVisible: true,
+      onFilter: (value, record) => record.name.indexOf(value) === 0,
+    }];
+
+    const onChange = jest.fn();
+    const rowSelection = {
+      onChange,
+    };
+
+    const wrapper = mount(
+      <Table
+        columns={filterColumns}
+        dataSource={data}
+        rowSelection={rowSelection}
+      />
+    );
+
+    function clickFilter(indexList) {
+      indexList.forEach((index) => {
+        wrapper.find('.ant-dropdown-menu-item .ant-checkbox-wrapper').at(index).simulate('click');
+      });
+      wrapper.find('.ant-table-filter-dropdown-btns .ant-table-filter-dropdown-link.confirm').simulate('click');
+    }
+
+    function clickItem() {
+      wrapper.find('tbody .ant-table-selection-column .ant-checkbox-input').at(0).simulate('change', {
+        target: { checked: true },
+      });
+    }
+
+    // Check Jack
+    clickFilter([0]);
+    expect(wrapper.find('tbody tr').length).toBe(1);
+    clickItem();
+    expect(onChange.mock.calls[0][0].length).toBe(1);
+    expect(onChange.mock.calls[0][1].length).toBe(1);
+
+    // Check Lucy
+    clickFilter([0, 1]);
+    expect(wrapper.find('tbody tr').length).toBe(1);
+    clickItem();
+    expect(onChange.mock.calls[1][0].length).toBe(2);
+    expect(onChange.mock.calls[1][1].length).toBe(2);
   });
 });

@@ -190,4 +190,118 @@ describe('Cascader', () => {
     wrapper.setProps({ options: [options[0]] });
     expect(wrapper.find('.ant-cascader-menu-item').length).toBe(1);
   });
+
+  it('can use fieldNames', () => {
+    const customerOptions = [{
+      code: 'zhejiang',
+      name: 'Zhejiang',
+      items: [{
+        code: 'hangzhou',
+        name: 'Hangzhou',
+        items: [{
+          code: 'xihu',
+          name: 'West Lake',
+        }],
+      }],
+    }, {
+      code: 'jiangsu',
+      name: 'Jiangsu',
+      items: [{
+        code: 'nanjing',
+        name: 'Nanjing',
+        items: [{
+          code: 'zhonghuamen',
+          name: 'Zhong Hua Men',
+        }],
+      }],
+    }];
+    const wrapper = mount(
+      <Cascader
+        options={customerOptions}
+        fieldNames={{
+          children: 'items',
+          label: 'name',
+          value: 'code',
+        }}
+      />
+    );
+    wrapper.instance().handleChange(['zhejiang', 'hangzhou', 'xihu'], customerOptions);
+    expect(wrapper.find('.ant-cascader-picker-label').text().split('/').length).toBe(3);
+  });
+
+  // https://github.com/ant-design/ant-design/issues/12970
+  it('can use filedNames too, for compatibility', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const customerOptions = [{
+      code: 'zhejiang',
+      name: 'Zhejiang',
+      items: [{
+        code: 'hangzhou',
+        name: 'Hangzhou',
+        items: [{
+          code: 'xihu',
+          name: 'West Lake',
+        }],
+      }],
+    }, {
+      code: 'jiangsu',
+      name: 'Jiangsu',
+      items: [{
+        code: 'nanjing',
+        name: 'Nanjing',
+        items: [{
+          code: 'zhonghuamen',
+          name: 'Zhong Hua Men',
+        }],
+      }],
+    }];
+    const wrapper = mount(
+      <Cascader
+        options={customerOptions}
+        filedNames={{
+          children: 'items',
+          label: 'name',
+          value: 'code',
+        }}
+      />
+    );
+    wrapper.instance().handleChange(['zhejiang', 'hangzhou', 'xihu'], customerOptions);
+    expect(wrapper.find('.ant-cascader-picker-label').text().split('/').length).toBe(3);
+    expect(errorSpy).toHaveBeenLastCalledWith(
+      'Warning: `filedNames` of Cascader is a typo usage and deprecated, please use `fieldNames` instead.'
+    );
+    errorSpy.mockReset();
+  });
+
+  describe('limit filtered item count', () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    afterAll(() => {
+      errorSpy.mockRestore();
+    });
+
+    it('limit with positive number', () => {
+      const wrapper = mount(<Cascader options={options} showSearch={{ filter, limit: 1 }} />);
+      wrapper.find('input').simulate('click');
+      wrapper.find('input').simulate('change', { target: { value: 'a' } });
+      expect(wrapper.find('.ant-cascader-menu-item').length).toBe(1);
+    });
+
+    it('not limit', () => {
+      const wrapper = mount(<Cascader options={options} showSearch={{ filter, limit: false }} />);
+      wrapper.find('input').simulate('click');
+      wrapper.find('input').simulate('change', { target: { value: 'a' } });
+      expect(wrapper.find('.ant-cascader-menu-item').length).toBe(2);
+    });
+
+    it('negative limit', () => {
+      const wrapper = mount(<Cascader options={options} showSearch={{ filter, limit: -1 }} />);
+      wrapper.find('input').simulate('click');
+      wrapper.find('input').simulate('change', { target: { value: 'a' } });
+      expect(wrapper.find('.ant-cascader-menu-item').length).toBe(2);
+      expect(errorSpy).toBeCalledWith(
+        'Warning: \'limit\' of showSearch in Cascader should be positive number or false.'
+      );
+    });
+  });
 });

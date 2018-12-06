@@ -1,10 +1,10 @@
-import PropTypes from 'prop-types';
+import * as PropTypes from 'prop-types';
 import * as React from 'react';
 import Icon from '../icon';
 import { Circle } from 'rc-progress';
 import classNames from 'classnames';
 
-const statusColorMap = {
+const statusColorMap: Record<string, string> = {
   normal: '#108ee9',
   exception: '#ff5500',
   success: '#87d068',
@@ -19,10 +19,12 @@ export interface ProgressProps {
   type?: ProgressType;
   percent?: number;
   successPercent?: number;
-  format?: (percent?: number, successPercent?: number) => string;
+  format?: (percent?: number, successPercent?: number) => React.ReactNode;
   status?: 'success' | 'active' | 'exception';
   showInfo?: boolean;
   strokeWidth?: number;
+  strokeLinecap?: string;
+  strokeColor?: string;
   trailColor?: string;
   width?: number;
   style?: React.CSSProperties;
@@ -41,16 +43,13 @@ const validProgress = (progress: number | undefined) => {
 };
 
 export default class Progress extends React.Component<ProgressProps, {}> {
-  static Line: any;
-  static Circle: any;
-
   static defaultProps = {
-    type: 'line' as ProgressType,
+    type: 'line',
     percent: 0,
     showInfo: true,
     trailColor: '#f3f3f3',
     prefixCls: 'ant-progress',
-    size: 'default' as ProgressSize,
+    size: 'default',
   };
 
   static propTypes = {
@@ -60,6 +59,8 @@ export default class Progress extends React.Component<ProgressProps, {}> {
     percent: PropTypes.number,
     width: PropTypes.number,
     strokeWidth: PropTypes.number,
+    strokeLinecap: PropTypes.oneOf(['round', 'square']),
+    strokeColor: PropTypes.string,
     trailColor: PropTypes.string,
     format: PropTypes.func,
     gapDegree: PropTypes.number,
@@ -70,10 +71,11 @@ export default class Progress extends React.Component<ProgressProps, {}> {
     const props = this.props;
     const {
       prefixCls, className, percent = 0, status, format, trailColor, size, successPercent,
-      type, strokeWidth, width, showInfo, gapDegree = 0, gapPosition, ...restProps
+      type, strokeWidth, width, showInfo, gapDegree = 0, gapPosition, strokeColor, strokeLinecap = 'round',
+      ...restProps
     } = props;
     const progressStatus = parseInt((successPercent ? successPercent.toString() : percent.toString()), 10) >= 100 &&
-    !('status' in props) ? 'success' : (status || 'normal');
+      !('status' in props) ? 'success' : (status || 'normal');
     let progressInfo;
     let progress;
     const textFormatter = format || (percentNumber => `${percentNumber}%`);
@@ -84,21 +86,31 @@ export default class Progress extends React.Component<ProgressProps, {}> {
       if (format || (progressStatus !== 'exception' && progressStatus !== 'success')) {
         text = textFormatter(validProgress(percent), validProgress(successPercent));
       } else if (progressStatus === 'exception') {
-        text = <Icon type={`cross${iconType}`} />;
+        text = <Icon type={`close${iconType}`} theme={type === 'line' ? 'filled' : 'outlined'} />;
       } else if (progressStatus === 'success') {
-        text = <Icon type={`check${iconType}`} />;
+        text = <Icon type={`check${iconType}`} theme={type === 'line' ? 'filled' : 'outlined'} />;
       }
-      progressInfo = <span className={`${prefixCls}-text`}>{text}</span>;
+      progressInfo = (
+        <span
+          className={`${prefixCls}-text`}
+          title={typeof text === 'string' ? text : undefined}
+        >
+          {text}
+        </span>
+      );
     }
 
     if (type === 'line') {
       const percentStyle = {
         width: `${validProgress(percent)}%`,
         height: strokeWidth || (size === 'small' ? 6 : 8),
+        background: strokeColor,
+        borderRadius: strokeLinecap === 'square' ? 0 : '100px',
       };
       const successPercentStyle = {
         width: `${validProgress(successPercent)}%`,
         height: strokeWidth || (size === 'small' ? 6 : 8),
+        borderRadius: strokeLinecap === 'square' ? 0 : '100px',
       };
       const successSegment = successPercent !== undefined
         ? <div className={`${prefixCls}-success-bg`} style={successPercentStyle} />
@@ -130,7 +142,8 @@ export default class Progress extends React.Component<ProgressProps, {}> {
             percent={validProgress(percent)}
             strokeWidth={circleWidth}
             trailWidth={circleWidth}
-            strokeColor={(statusColorMap as any)[progressStatus]}
+            strokeColor={strokeColor || statusColorMap[progressStatus]}
+            strokeLinecap={strokeLinecap}
             trailColor={trailColor}
             prefixCls={prefixCls}
             gapDegree={gapDeg}

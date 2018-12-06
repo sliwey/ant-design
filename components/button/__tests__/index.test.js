@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { render, mount } from 'enzyme';
+import renderer from 'react-test-renderer';
 import Button from '..';
 import Icon from '../../icon';
 
@@ -9,6 +10,13 @@ describe('Button', () => {
       <Button>Follow</Button>
     );
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it('mount correctly', () => {
+    if (process.env.REACT === '15') {
+      return;
+    }
+    expect(() => renderer.create(<Button>Follow</Button>)).not.toThrow();
   });
 
   it('renders Chinese characters correctly', () => {
@@ -44,7 +52,7 @@ describe('Button', () => {
   });
 
   it('renders Chinese characters correctly in HOC', () => {
-    const Text = props => <span>{props.children}</span>;
+    const Text = ({ children }) => <span>{children}</span>;
     const wrapper = mount(
       <Button><Text>按钮</Text></Button>
     );
@@ -74,11 +82,14 @@ describe('Button', () => {
       state = {
         loading: false,
       };
+
       enterLoading = () => {
         this.setState({ loading: true });
       }
+
       render() {
-        return <Button loading={this.state.loading} onClick={this.enterLoading}>Button</Button>;
+        const { loading } = this.state;
+        return <Button loading={loading} onClick={this.enterLoading}>Button</Button>;
       }
     }
     const wrapper = mount(
@@ -94,11 +105,14 @@ describe('Button', () => {
       state = {
         loading: false,
       };
+
       enterLoading = () => {
         this.setState({ loading: { delay: 1000 } });
       }
+
       render() {
-        return <Button loading={this.state.loading} onClick={this.enterLoading}>Button</Button>;
+        const { loading } = this.state;
+        return <Button loading={loading} onClick={this.enterLoading}>Button</Button>;
       }
     }
     const wrapper = mount(
@@ -128,5 +142,21 @@ describe('Button', () => {
       <Button>{false}</Button>
     );
     expect(wrapper2).toMatchSnapshot();
+  });
+
+  it('should has click wave effect', async () => {
+    const wrapper = mount(
+      <Button type="primary">button</Button>
+    );
+    wrapper.find('.ant-btn').getDOMNode().click();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(wrapper.render()).toMatchSnapshot();
+  });
+
+  it('should not render as link button when href is undefined', async () => {
+    const wrapper = mount(
+      <Button type="primary" href={undefined}>button</Button>
+    );
+    expect(wrapper.render()).toMatchSnapshot();
   });
 });

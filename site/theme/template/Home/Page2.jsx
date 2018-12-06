@@ -23,7 +23,6 @@ const page2Data = [
     img: 'https://gw.alipayobjects.com/zos/rmsportal/GobRAKexhfTSJdLFzDFY.svg',
     name: 'Ant Design Mobile',
     slogan: (<FormattedMessage id="app.home.product-mobile-slogan" />),
-    link: 'https://mobile.ant.design/index-cn',
   },
   {
     img: 'https://gw.alipayobjects.com/zos/rmsportal/slVtnOCcgeAcLEPwtewY.svg',
@@ -31,11 +30,18 @@ const page2Data = [
     slogan: (<FormattedMessage id="app.home.product-antv-slogan" />),
     link: 'https://antv.alipay.com/zh-cn/index.html',
   },
+  {
+    img: 'https://gw.alipayobjects.com/zos/rmsportal/EAHlyTmYeDtTkZIPbUnP.svg',
+    name: 'Ant Design Landing',
+    slogan: (<FormattedMessage id="app.home.product-landing-slogan" />),
+    link: 'https://landing.ant.design',
+    new: true,
+  },
 ];
 
 const svgBgChild = [
   (
-    <svg width="100%" height="100%" viewBox="0 0 1401 1109" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd" preserveAspectRatio="xMidYMid slice" >
+    <svg width="100%" height="100%" viewBox="0 0 1401 1109" stroke="none" strokeWidth="1" fill="none" fillRule="evenodd" preserveAspectRatio="xMidYMid slice">
       <g transform="translate(-79.000000, -21.000000)">
         <circle id="Oval-13" stroke="none" fill="#EBEDF0" fillRule="evenodd" cx="98.5" cy="98.5" r="98.5" />
         <rect id="Rectangle-33" stroke="none" fill="#EBEDF0" fillRule="evenodd" transform="translate(1261.132034, 1217.132034) rotate(45.000000) translate(-1261.132034, -1217.132034) " x="1111.13203" y="1007.13203" width="300" height="300" rx="1" />
@@ -58,7 +64,7 @@ const svgBgChild = [
       <g id="Group-11" transform="translate(1207.000000, 419.000000)" fill="#13C2C2">
         <image xlinkHref="https://gw.alipayobjects.com/zos/rmsportal/MnLEmwjipfhzPUmBJnJE.svg" />
       </g>
-      <g id="Group-28" transform="translate(884.000000, 821.000000)" fill="#2F54EB">
+      <g id="Group-28" transform="translate(884.000000, 880.000000)" fill="#2F54EB">
         <image xlinkHref="https://gw.alipayobjects.com/zos/rmsportal/dyNuxLOZtvjoHSVisbhQ.svg" />
       </g>
     </svg>
@@ -66,8 +72,8 @@ const svgBgChild = [
 ];
 
 const svgBgChildArray = svgBgChild.map((item, i) => {
-  const { props } = item;
-  return React.cloneElement(item, { children: svgBgToParallax(props.children, i) });
+  const { props: { children } } = item;
+  return React.cloneElement(item, { children: svgBgToParallax(children, i) });
 });
 export default function Page2({ isMobile, locale }) {
   const isZhCN = locale === 'zh-CN';
@@ -85,10 +91,24 @@ export default function Page2({ isMobile, locale }) {
     if (!isMobile && !i) {
       return null;
     }
-    const content = isMobile && !i ? componentButton : [
+    const mobileContent = (
+      <div className="components-button-wrapper">
+        <p key="p">{item.slogan}</p>
+        <a className="more-mobile-react" href="https://mobile.ant.design" target="_black">
+          <FormattedMessage id="app.home.more-mobile-react" />
+          <Icon type="right" />
+        </a>
+        <a className="more-mobile-angular" href="http://ng.mobile.ant.design" target="_black">
+          <FormattedMessage id="app.home.more-mobile-angular" />
+          <Icon type="right" />
+        </a>
+      </div>
+    );
+    const moreContent = i === 2 ? mobileContent : [
       <p key="p">{item.slogan}</p>,
       <span className="more" key="a"><FormattedMessage id="app.home.more" /> <Icon type="right" /></span>,
     ];
+    const content = isMobile && !i ? componentButton : moreContent;
     return (
       <a className="product-block" key={item.name} href={item.link} style={{ display: 'block' }}>
         <Row>
@@ -100,7 +120,7 @@ export default function Page2({ isMobile, locale }) {
             <img src={item.img} style={isMobile && i === 2 ? { marginLeft: 16 } : {}} alt="icon" />
           </Col>
           <Col xs={16} md={i === 2 ? 18 : 16} className="block-text-wrapper">
-            <h4>{item.name}</h4>
+            <h4>{item.name} {item.new && (<span className="new">NEW</span>)}</h4>
             {content}
           </Col>
         </Row>
@@ -109,7 +129,7 @@ export default function Page2({ isMobile, locale }) {
   });
   return (
     <div className="home-page-wrapper page2" id="page2">
-      <div className="page" >
+      <div className="page">
         <h2><FormattedMessage id="app.home.solution" /></h2>
         <ScrollOverPack component={Row} className="page2-content" playScale="0.4">
           <QueueAnim
@@ -136,10 +156,10 @@ export default function Page2({ isMobile, locale }) {
           </QueueAnim>
         </ScrollOverPack>
       </div>
-      <div className="parallax-bg bottom" >
+      <div className="parallax-bg bottom">
         {svgBgChildArray[0]}
       </div>
-      <div className="parallax-bg top" >
+      <div className="parallax-bg top">
         {svgBgChildArray[1]}
       </div>
     </div>

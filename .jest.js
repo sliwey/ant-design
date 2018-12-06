@@ -2,10 +2,11 @@ const libDir = process.env.LIB_DIR;
 
 const transformIgnorePatterns = [
   '/dist/',
-  'node_modules\/[^/]+?\/(?!(es|node_modules)\/)', // Ignore modules without es dir
+  'node_modules/[^/]+?/(?!(es|node_modules)/)', // Ignore modules without es dir
 ];
 
 module.exports = {
+  verbose: true,
   setupFiles: [
     './tests/setup.js',
   ],
@@ -30,7 +31,7 @@ module.exports = {
     '\\.js$': './node_modules/antd-tools/lib/jest/codePreprocessor',
     '\\.md$': './node_modules/antd-tools/lib/jest/demoPreprocessor',
   },
-  testRegex: libDir === 'dist' ? 'demo\\.test\\.js$' : '.*\\.test\\.js$',
+  testRegex: `${libDir === 'dist' ? 'demo' : '.*'}\\.test\\.js$`,
   collectCoverageFrom: [
     'components/**/*.{ts,tsx}',
     '!components/*/style/index.tsx',
@@ -46,6 +47,7 @@ module.exports = {
   globals: {
     'ts-jest': {
       tsConfigFile: './tsconfig.test.json',
-    }
+    },
   },
+  testURL: 'http://localhost',
 };

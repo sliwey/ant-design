@@ -3,6 +3,13 @@ import { mount } from 'enzyme';
 import Menu from '..';
 import Icon from '../../icon';
 
+jest.mock('mutationobserver-shim', () => {
+  global.MutationObserver = function MutationObserver() {
+    this.observe = () => {};
+    this.disconnect = () => {};
+  };
+});
+
 const { SubMenu } = Menu;
 
 describe('Menu', () => {
@@ -85,6 +92,7 @@ describe('Menu', () => {
     wrapper.update();
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
     wrapper.setProps({ openKeys: ['1'] });
+    wrapper.update();
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
   });
 
@@ -103,6 +111,7 @@ describe('Menu', () => {
     wrapper.update();
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
     wrapper.setProps({ openKeys: ['1'] });
+    wrapper.update();
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
   });
 
@@ -121,6 +130,7 @@ describe('Menu', () => {
     wrapper.update();
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
     wrapper.setProps({ openKeys: ['1'] });
+    wrapper.update();
     expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).not.toBe(true);
   });
 
@@ -181,6 +191,7 @@ describe('Menu', () => {
     // 动画结束后套样式;
     jest.runAllTimers();
     wrapper.update();
+    wrapper.simulate('transitionEnd', { propertyName: 'width' });
 
     expect(wrapper.find('ul.ant-menu-root').at(0).hasClass('ant-menu-vertical')).toBe(true);
     expect(wrapper.find('ul.ant-menu-sub').length).toBe(0);
@@ -214,6 +225,7 @@ describe('Menu', () => {
     wrapper.setProps({ inlineCollapsed: true });
     jest.runAllTimers();
     wrapper.update();
+    wrapper.simulate('transitionEnd', { propertyName: 'width' });
     wrapper.find('.ant-menu-submenu-title').at(0).simulate('mouseEnter');
     jest.runAllTimers();
     wrapper.update();
@@ -293,5 +305,34 @@ describe('Menu', () => {
       toggleMenu(wrapper, 0, 'mouseleave');
       expect(wrapper.find('.ant-menu-sub').hostNodes().at(0).hasClass('ant-menu-hidden')).toBe(true);
     });
+  });
+
+  it('inline title', () => {
+    jest.useFakeTimers();
+    const wrapper = mount(
+      <Menu
+        mode="inline"
+        inlineCollapsed
+      >
+        <Menu.Item key="1" title="bamboo lucky">
+          <Icon type="pie-chart" />
+          <span>
+            Option 1
+            <img
+              style={{ width: 20 }}
+              alt="test"
+              src="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+            />
+          </span>
+        </Menu.Item>
+      </Menu>
+    );
+
+    wrapper.find('.ant-menu-item').simulate('mouseenter');
+    jest.runAllTimers();
+    wrapper.update();
+
+    const text = wrapper.find('.ant-tooltip-inner').text();
+    expect(text).toBe('bamboo lucky');
   });
 });

@@ -6,10 +6,11 @@ export interface PickerProps {
   id?: number | string;
   prefixCls?: string;
   inputPrefixCls?: string;
-  format?: string;
+  format?: string | string[];
   disabled?: boolean;
   allowClear?: boolean;
   className?: string;
+  suffixIcon?: React.ReactNode;
   style?: React.CSSProperties;
   popupStyle?: React.CSSProperties;
   dropdownClassName?: string;
@@ -41,7 +42,7 @@ export interface DatePickerProps extends PickerProps, SinglePickerProps {
     disabledSeconds?: () => number[],
   };
   onOpenChange?: (status: boolean) => void;
-  onOk?: (selectedTime: moment.Moment) => void;
+  onOk?: (selectedTime: RangePickerValue) => void;
   placeholder?: string;
 }
 

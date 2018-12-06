@@ -1,7 +1,10 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import Select from '..';
+import Icon from '../../icon';
 import focusTest from '../../../tests/shared/focusTest';
+
+const { Option } = Select;
 
 describe('Select', () => {
   focusTest(Select);
@@ -37,7 +40,7 @@ describe('Select', () => {
 
   it('should not have default notFoundContent when mode is combobox', () => {
     const wrapper = mount(
-      <Select mode="combobox" />
+      <Select mode={Select.SECRET_COMBOBOX_MODE_DO_NOT_USE} />
     );
     wrapper.find('.ant-select').simulate('click');
     jest.runAllTimers();
@@ -47,12 +50,50 @@ describe('Select', () => {
 
   it('should not have notFoundContent when mode is combobox and notFoundContent is set', () => {
     const wrapper = mount(
-      <Select mode="combobox" notFoundContent="not at all" />
+      <Select mode={Select.SECRET_COMBOBOX_MODE_DO_NOT_USE} notFoundContent="not at all" />
     );
     wrapper.find('.ant-select').simulate('click');
     jest.runAllTimers();
     const dropdownWrapper = mount(wrapper.find('Trigger').instance().getComponent());
     expect(dropdownWrapper.find('MenuItem').length).toBe(1);
     expect(dropdownWrapper.find('MenuItem').at(0).text()).toBe('not at all');
+  });
+
+  it('should be controlled by open prop', () => {
+    const onDropdownVisibleChange = jest.fn();
+    const wrapper = mount(
+      <Select open onDropdownVisibleChange={onDropdownVisibleChange}>
+        <Option value="1">1</Option>
+      </Select>
+    );
+    let dropdownWrapper = mount(wrapper.find('Trigger').instance().getComponent());
+    expect(dropdownWrapper.props().visible).toBe(true);
+    wrapper.find('.ant-select').simulate('click');
+    expect(onDropdownVisibleChange).toHaveBeenLastCalledWith(false);
+    expect(dropdownWrapper.props().visible).toBe(true);
+
+    wrapper.setProps({ open: false });
+    dropdownWrapper = mount(wrapper.find('Trigger').instance().getComponent());
+    expect(dropdownWrapper.props().visible).toBe(false);
+    wrapper.find('.ant-select').simulate('click');
+    expect(onDropdownVisibleChange).toHaveBeenLastCalledWith(true);
+    expect(dropdownWrapper.props().visible).toBe(false);
+  });
+
+  describe('Select Custom Icons', () => {
+    it('should support customized icons', () => {
+      const wrapper = mount(
+        <Select
+          removeIcon={<Icon type="close" />}
+          clearIcon={<Icon type="close" />}
+          menuItemSelectedIcon={<Icon type="close" />}
+        >
+          <Option value="1">1</Option>
+        </Select>
+      );
+      wrapper.setProps({ count: 10 });
+      jest.runAllTimers();
+      expect(wrapper.render()).toMatchSnapshot();
+    });
   });
 });

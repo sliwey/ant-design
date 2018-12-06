@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as moment from 'moment';
+import { polyfill } from 'react-lifecycles-compat';
 import Calendar from 'rc-calendar';
 import RcDatePicker from 'rc-calendar/lib/Picker';
 import classNames from 'classnames';
@@ -10,11 +11,18 @@ function formatValue(value: moment.Moment | null, format: string): string {
   return (value && value.format(format)) || '';
 }
 
-export default class WeekPicker extends React.Component<any, any> {
+class WeekPicker extends React.Component<any, any> {
   static defaultProps = {
     format: 'gggg-wo',
     allowClear: true,
   };
+
+  static getDerivedStateFromProps(nextProps: any) {
+    if ('value' in nextProps) {
+      return { value: nextProps.value };
+    }
+    return null;
+  }
 
   private input: any;
 
@@ -31,11 +39,7 @@ export default class WeekPicker extends React.Component<any, any> {
       value,
     };
   }
-  componentWillReceiveProps(nextProps: any) {
-    if ('value' in nextProps) {
-      this.setState({ value: nextProps.value });
-    }
-  }
+
   weekDateRender = (current: any) => {
     const selectedValue = this.state.value;
     const { prefixCls } = this.props;
@@ -56,12 +60,29 @@ export default class WeekPicker extends React.Component<any, any> {
       </div>
     );
   }
+
   handleChange = (value: moment.Moment | null) => {
     if (!('value' in this.props)) {
       this.setState({ value });
     }
     this.props.onChange(value, formatValue(value, this.props.format));
   }
+
+  handleOpenChange = (open: boolean) => {
+    const { onOpenChange } = this.props;
+    if (!('open' in this.props)) {
+      this.setState({ open });
+    }
+
+    if (onOpenChange) {
+      onOpenChange(open);
+    }
+
+    if (!open) {
+      this.focus();
+    }
+  };
+
   clearSelection = (e: React.MouseEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
@@ -84,9 +105,10 @@ export default class WeekPicker extends React.Component<any, any> {
     const {
       prefixCls, className, disabled, pickerClass, popupStyle,
       pickerInputClass, format, allowClear, locale, localeCode, disabledDate,
-      style, onFocus, onBlur,
+      style, onFocus, onBlur, id, suffixIcon,
     } = this.props;
 
+    const { open } = this.state;
     const pickerValue = this.state.value;
     if (pickerValue && localeCode) {
       pickerValue.locale(localeCode);
@@ -109,12 +131,28 @@ export default class WeekPicker extends React.Component<any, any> {
     );
     const clearIcon = (!disabled && allowClear && this.state.value) ? (
       <Icon
-        type="cross-circle"
+        type="close-circle"
         className={`${prefixCls}-picker-clear`}
         onClick={this.clearSelection}
+        theme="filled"
       />
     ) : null;
-    const input = ({ value }: {  value: moment.Moment | undefined }) => {
+
+    const inputIcon = suffixIcon && (
+      React.isValidElement<{ className?: string }>(suffixIcon)
+        ? React.cloneElement(
+          suffixIcon,
+          {
+            className: classNames({
+              [suffixIcon.props.className!]: suffixIcon.props.className,
+              [`${prefixCls}-picker-icon`]: true,
+            }),
+          },
+        ) : <span className={`${prefixCls}-picker-icon`}>{suffixIcon}</span>) || (
+        <Icon type="calendar" className={`${prefixCls}-picker-icon`} />
+      );
+
+    const input = ({ value }: { value: moment.Moment | undefined }) => {
       return (
         <span>
           <input
@@ -126,21 +164,26 @@ export default class WeekPicker extends React.Component<any, any> {
             className={pickerInputClass}
             onFocus={onFocus}
             onBlur={onBlur}
-            style={style}
           />
           {clearIcon}
-          <span className={`${prefixCls}-picker-icon`} />
+          {inputIcon}
         </span>
       );
     };
     return (
-      <span className={classNames(className, pickerClass)} id={this.props.id}>
+      <span
+        className={classNames(className, pickerClass)}
+        style={style}
+        id={id}
+      >
         <RcDatePicker
           {...this.props}
           calendar={calendar}
           prefixCls={`${prefixCls}-picker-container`}
           value={pickerValue}
           onChange={this.handleChange}
+          open={open}
+          onOpenChange={this.handleOpenChange}
           style={popupStyle}
         >
           {input}
@@ -149,3 +192,7 @@ export default class WeekPicker extends React.Component<any, any> {
     );
   }
 }
+
+polyfill(WeekPicker);
+
+export default WeekPicker;

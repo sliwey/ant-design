@@ -11,9 +11,9 @@ class AffixMounter extends React.Component {
       events[event] = cb;
     });
   }
-  getTarget = () => {
-    return this.container;
-  }
+
+  getTarget = () => this.container
+
   render() {
     return (
       <div
@@ -32,10 +32,10 @@ class AffixMounter extends React.Component {
         >
           <Affix
             target={() => this.container}
-            ref={ele => this.affix = ele}
+            ref={(ele) => { this.affix = ele; }}
             {...this.props}
           >
-            <Button type="primary" >
+            <Button type="primary">
               Fixed at the top of container
             </Button>
           </Affix>
@@ -57,11 +57,9 @@ describe('Affix Render', () => {
   });
 
   const scrollTo = (top) => {
-    wrapper.instance().affix.fixedNode.parentNode.getBoundingClientRect = jest.fn(() => {
-      return {
-        bottom: 100, height: 28, left: 0, right: 0, top: 50 - top, width: 195,
-      };
-    });
+    wrapper.instance().affix.fixedNode.parentNode.getBoundingClientRect = jest.fn(() => ({
+      bottom: 100, height: 28, left: 0, right: 0, top: 50 - top, width: 195,
+    }));
     wrapper.instance().container.scrollTop = top;
     events.scroll({
       type: 'scroll',
@@ -99,5 +97,20 @@ describe('Affix Render', () => {
 
     scrollTo(0);
     expect(wrapper.instance().affix.state.affixStyle).not.toBe(null);
+  });
+
+  it('updatePosition when offsetTop changed', () => {
+    document.body.innerHTML = '<div id="mounter" />';
+
+    wrapper = mount(<AffixMounter offsetTop={0} />, { attachTo: document.getElementById('mounter') });
+    jest.runAllTimers();
+
+    scrollTo(100);
+    expect(wrapper.instance().affix.state.affixStyle.top).toBe(0);
+    wrapper.setProps({
+      offsetTop: 10,
+    });
+    jest.runAllTimers();
+    expect(wrapper.instance().affix.state.affixStyle.top).toBe(10);
   });
 });
